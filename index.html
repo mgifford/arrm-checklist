@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ARRM-based WCAG Checklist</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --accent: #22c55e;
+      --accent-2: #3b82f6;
+      --chip: #1f2937;
+      --danger: #ef4444;
+      --warn: #f59e0b;
+      --ok: #10b981;
+      --ring: #334155;
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --muted: #475569;
+      --text: #0f172a;
+      --accent: #16a34a;
+      --accent-2: #2563eb;
+      --chip: #f1f5f9;
+      --danger: #b91c1c;
+      --warn: #b45309;
+      --ok: #059669;
+      --ring: #e2e8f0;
+    }
+
+    /* --- WCAG Fixes Start --- */
+
+    /* Adjusted colors for WCAG AA compliance in dark theme */
+    :root {
+      /* Increased contrast for links */
+      --link: #81a9ff; 
+      /* Increased contrast for primary badges */
+      --badge-primary-bg: #1f2a3a;
+      --badge-primary-border: #4a638b;
+      /* Increased contrast for warning badges */
+      --badge-warn-bg: #2d261e;
+      --badge-warn-border: #806132;
+    }
+
+    /* Light theme links */
+    [data-theme="light"] {
+        --link: #0000ee;
+    }
+
+    /* Apply new link color */
+    .sc-title a, .toolbar a {
+      color: var(--link);
+    }
+
+    /* Adjusting badge background and border colors */
+    .badge[data-has*="P"] {
+      background: var(--badge-primary-bg);
+      border-color: var(--badge-primary-border);
+    }
+    .badge[data-has*="S"] {
+      background: var(--badge-warn-bg);
+      border-color: var(--badge-warn-border);
+    }
+
+    /* --- WCAG Fixes End --- */
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial; }
+
+    header { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(8px); background: color-mix(in oklab, var(--bg) 92%, transparent); border-bottom: 1px solid var(--ring); }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; position: relative; }
+    h1 { font-size: 20px; margin: 0 0 6px; letter-spacing: .2px; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+    /* Theme toggle pinned top-right */
+    #theme { position: absolute; top: 14px; right: 16px; background: transparent; border: 1px solid var(--ring); color: var(--text); border-radius: 999px; padding: 6px 10px; cursor: pointer; }
+
+    .layout { display: grid; grid-template-columns: 240px 1fr; gap: 16px; padding: 16px; }
+    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } }
+
+    .side { position: sticky; top: 90px; align-self: start; background: var(--panel); border: 1px solid var(--ring); border-radius: 14px; padding: 10px; }
+    .side h3 { margin: 4px 8px 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+    .btn { width: 100%; display: inline-flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: transparent; border: 1px solid var(--ring); color: var(--text); cursor: pointer; text-align: left; margin-bottom: 8px; }
+    .btn[aria-pressed="true"] { border-color: var(--accent-2); box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent-2) 25%, transparent) inset; }
+    .pill { margin-left: auto; background: var(--chip); color: var(--muted); padding: 2px 8px; border-radius: 999px; font-size: 12px; }
+
+    .controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 6px 0 0; }
+    @media (max-width: 720px) { .controls { grid-template-columns: 1fr 1fr; } }
+    .control { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 12px; color: var(--muted); }
+    select, input[type="search"] { background: var(--panel); border: 1px solid var(--ring); color: var(--text); padding: 10px 12px; border-radius: 10px; }
+
+    .card { background: var(--panel); border: 1px solid var(--ring); border-radius: 16px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { position: sticky; top: 0; background: color-mix(in oklab, var(--bg) 92%, transparent); border-bottom: 1px solid var(--ring); padding: 10px; font-weight: 600; font-size: 13px; }
+    tbody td { border-bottom: 1px solid var(--ring); padding: 10px; vertical-align: top; }
+    tbody tr:hover { background: color-mix(in oklab, var(--accent-2) 10%, transparent); }
+
+    .sc-title { display: flex; flex-direction: column; gap: 4px; }
+    .sc-title a { color: var(--link); text-decoration: none; }
+    .sc-desc { color: var(--muted); font-size: 13px; }
+
+    .level { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--ring); color: var(--muted); white-space: nowrap; }
+    .role-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--chip); border: 1px solid var(--ring); color: var(--muted); }
+    .badge[data-has*="P"] { background: color-mix(in oklab, var(--accent) 20%, var(--chip)); border-color: color-mix(in oklab, var(--accent) 40%, var(--ring)); }
+    .badge[data-has*="S"] { background: color-mix(in oklab, var(--warn) 18%, var(--chip)); border-color: color-mix(in oklab, var(--warn) 40%, var(--ring)); }
+    .badge[data-has*="C"] { background: color-mix(in oklab, var(--accent-2) 18%, var(--chip)); border-color: color-mix(in oklab, var(--accent-2) 40%, var(--ring)); }
+
+    .check { display: inline-flex; align-items: center; gap: 8px; }
+    .check input { width: 18px; height: 18px; }
+
+    /* --- WCAG Fixes Start --- */
+
+    /* The toolbar is now a ul for better semantics */
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--ring);
+    }
+    .toolbar ul {
+        display: contents;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .toolbar li {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .toolbar li:not(:last-child)::after {
+        content: "";
+        width: 1px;
+        height: 22px;
+        background: var(--ring);
+    }
+    
+    /* --- WCAG Fixes End --- */
+    
+    .empty { padding: 24px; color: var(--muted); text-align: center; }
+    footer { color: var(--muted); font-size: 12px; margin-top: 8px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; border: 0; padding: 0; clip: rect(0 0 0 0); overflow: hidden; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <button id="theme" aria-label="Toggle light and dark theme">◐</button>
+      <h1>ARRM-based WCAG Checklist</h1>
+      <div class="sub">Vox-style checklist using ARRM's WCAG Success Criteria responsibility matrix. Filter by role, ownership, and level. Checkmarks persist locally and can be saved/loaded.</div>
+      <div class="controls" role="region" aria-label="Filters">
+        <div class="control">
+          <label for="role">Role</label>
+          <select id="role">
+            <option value="">All roles</option>
+            <option value="Business">Business</option>
+            <option value="Content Authoring">Content Authoring</option>
+            <option value="Visual Design">Visual Design</option>
+            <option value="User Experience (UX) Design">UX Design</option>
+            <option value="Front-End Development">Front-End Development</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="ownership">Ownership</label>
+          <select id="ownership">
+            <option value="">Any</option>
+            <option value="P">Primary (P)</option>
+            <option value="S">Secondary (S)</option>
+            <option value="C">Contributor (C)</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="level">WCAG Level</label>
+          <select id="level">
+            <option value="AA">A & AA</option>
+            <option value="A">A</option>
+            <option value="AA">AA</option>
+            <option value="AAA">AAA</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="query">Search</label>
+          <input id="query" type="search" placeholder="Search SC number, title, or role" />
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout" id="app" aria-busy="true">
+    <aside class="side" aria-label="Quick role filters">
+      <h3>Roles</h3>
+      <button class="btn" data-role="" aria-pressed="true">All roles <span class="pill" id="count-all">0</span></button>
+      <button class="btn" data-role="Business">Business <span class="pill" id="count-biz">0</span></button>
+      <button class="btn" data-role="Content Authoring">Content Authoring <span class="pill" id="count-auth">0</span></button>
+      <button class="btn" data-role="Visual Design">Visual Design <span class="pill" id="count-vis">0</span></button>
+      <button class="btn" data-role="User Experience (UX) Design">UX Design <span class="pill" id="count-ux">0</span></button>
+      <button class="btn" data-role="Front-End Development">Front-End Development <span class="pill" id="count-fed">0</span></button>
+      <footer>
+        <p>Data: ARRM WCAG SC matrix. Stored locally. Theme toggle and CSV/JSON export supported.</p>
+      </footer>
+    </aside>
+
+    <section>
+      <div class="card" role="region" aria-label="Checklist">
+        <div class="toolbar">
+          <strong>Checklist</strong>
+          <ul>
+            <li>
+                <a href="https://www.w3.org/WAI/planning/arrm/wcag-sc/" target="_blank" rel="noopener">ARRM SC table</a>
+            </li>
+            <li>
+                <a href="https://www.w3.org/WAI/WCAG22/quickref/" target="_blank" rel="noopener">WCAG QuickRef</a>
+            </li>
+            <li>
+                <a href="#" id="export-csv">Export checks (CSV)</a>
+            </li>
+            <li>
+                <a href="#" id="export-json">Save checklist (JSON)</a>
+            </li>
+            <li>
+                <input type="file" id="import-json" accept="application/json" hidden />
+                <a href="#" id="import-json-btn">Load checklist</a>
+            </li>
+            <li>
+                <a href="#" id="reset">Reset checks</a>
+            </li>
+          </ul>
+          <span id="result-count" aria-live="polite">Loading…</span>
+        </div>
+        <div>
+          <table aria-describedby="result-count">
+            <thead>
+              <tr>
+                <th style="min-width:260px;">WCAG SC and Title</th>
+                <th style="min-width:70px;">Level</th>
+                <th>Roles & ownership</th>
+                <th style="min-width:110px;">Mark done</th>
+              </tr>
+            </thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <div id="empty" class="empty" hidden>No results. Adjust filters.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <template id="row-tpl">
+    <tr>
+      <td>
+        <div class="sc-title">
+          <a class="sc-link" target="_blank" rel="noopener"></a>
+          <div class="sc-desc"></div>
+        </div>
+      </td>
+      <td><span class="level"></span></td>
+      <td class="role-badges"></td>
+      <td>
+        <label class="check">
+          <input type="checkbox" />
+          <span>Reviewed</span>
+        </label>
+      </td>
+    </tr>
+  </template>
+
+  <script>
+    const CSV_URL = 'https://www.w3.org/WAI/content-assets/wai-arrm/arrm-wcag-sc.csv';
+    const STORAGE_KEY = 'arrm_wcag_sc_v1';
+    const CHECKS_KEY = 'arrm_wcag_checks_v1';
+    const THEME_KEY = 'arrm_wcag_theme';
+
+    const roles = [
+      'Business',
+      'Content Authoring',
+      'Visual Design',
+      'User Experience (UX) Design',
+      'Front-End Development',
+    ];
+
+    // Fallback CSV so UI renders offline
+    const embeddedFallback = `ID,WCAG SC,Level,Business,Content Authoring,Visual Design,User Experience (UX) Design,Front-End Development\n1,1.1.1,A,C,"P, S, C","P, S, C","P, S, C","P, C"\n2,1.2.1,A,,"P, S","S","P, S",\n3,1.2.2,A,,"P",,"P, S",\n4,1.2.3,A,,"P",,,\n5,1.2.4,AA,,"P",,"S",\n6,1.2.5,AA,,"P",,"P",\n7,1.2.6,AAA,,"P",,"S",\n8,1.2.7,AAA,,"P",,"S",\n9,1.2.8,AAA,,"P, S",,"P, S",`;
+
+    // WCAG 2.1 titles per TR (partial but canonical); extend as needed
+    const WCAG21_TITLES = {
+      '1.1.1': 'Non-text Content',
+      '1.2.1': 'Audio-only and Video-only (Prerecorded)',
+      '1.2.2': 'Captions (Prerecorded)',
+      '1.2.3': 'Audio Description or Media Alternative (Prerecorded)',
+      '1.2.4': 'Captions (Live)',
+      '1.2.5': 'Audio Description (Prerecorded)',
+      '1.2.6': 'Sign Language (Prerecorded)',
+      '1.2.7': 'Extended Audio Description (Prerecorded)',
+      '1.2.8': 'Media Alternative (Prerecorded)',
+      '1.2.9': 'Audio-only (Live)',
+      '1.3.1': 'Info and Relationships',
+      '1.3.2': 'Meaningful Sequence',
+      '1.3.3': 'Sensory Characteristics',
+      '1.3.4': 'Orientation',
+      '1.3.5': 'Identify Input Purpose',
+      '1.3.6': 'Identify Purpose',
+      '1.4.1': 'Use of Color',
+      '1.4.2': 'Audio Control',
+      '1.4.3': 'Contrast (Minimum)',
+      '1.4.4': 'Resize text',
+      '1.4.5': 'Images of Text',
+      '1.4.6': 'Contrast (Enhanced)',
+      '1.4.7': 'Low or No Background Audio',
+      '1.4.8': 'Visual Presentation',
+      '1.4.9': 'Images of Text (No Exception)',
+      '1.4.10': 'Reflow',
+      '1.4.11': 'Non-text Contrast',
+      '1.4.12': 'Text Spacing',
+      '1.4.13': 'Content on Hover or Focus',
+      '2.1.1': 'Keyboard',
+      '2.1.2': 'No Keyboard Trap',
+      '2.1.3': 'Keyboard (No Exception)',
+      '2.1.4': 'Character Key Shortcuts',
+      '2.2.1': 'Timing Adjustable',
+      '2.2.2': 'Pause, Stop, Hide',
+      '2.2.3': 'No Timing',
+      '2.2.4': 'Interruptions',
+      '2.2.5': 'Re-authenticating',
+      '2.2.6': 'Timeouts',
+      '2.3.1': 'Three Flashes or Below Threshold',
+      '2.3.2': 'Three Flashes',
+      '2.3.3': 'Animation from Interactions',
+      '2.4.1': 'Bypass Blocks',
+      '2.4.2': 'Page Titled',
+      '2.4.3': 'Focus Order',
+      '2.4.4': 'Link Purpose (In Context)',
+      '2.4.5': 'Multiple Ways',
+      '2.4.6': 'Headings and Labels',
+      '2.4.7': 'Focus Visible',
+      '2.4.8': 'Location',
+      '2.4.9': 'Link Purpose (Link Only)',
+      '2.4.10': 'Section Headings',
+      '2.5.1': 'Pointer Gestures',
+      '2.5.2': 'Pointer Cancellation',
+      '2.5.3': 'Label in Name',
+      '2.5.4': 'Motion Actuation',
+      '2.5.5': 'Target Size',
+      '2.5.6': 'Concurrent Input Mechanisms',
+      '3.1.1': 'Language of Page',
+      '3.1.2': 'Language of Parts',
+      '3.1.3': 'Unusual Words',
+      '3.1.4': 'Abbreviations',
+      '3.1.5': 'Reading Level',
+      '3.1.6': 'Pronunciation',
+      '3.2.1': 'On Focus',
+      '3.2.2': 'On Input',
+      '3.2.3': 'Consistent Navigation',
+      '3.2.4': 'Consistent Identification',
+      '3.2.5': 'Change on Request',
+      '3.3.1': 'Error Identification',
+      '3.3.2': 'Labels or Instructions',
+      '3.3.3': 'Error Suggestion',
+      '3.3.4': 'Error Prevention (Legal, Financial, Data)',
+      '3.3.5': 'Help',
+      '3.3.6': 'Error Prevention (All)',
+      '4.1.1': 'Parsing',
+      '4.1.2': 'Name, Role, Value',
+      '4.1.3': 'Status Messages'
+    };
+
+    // Short, checklist-style guidance snippets
+    const SC_SNIPPETS = {
+      '1.1.1': 'Provide text alternatives for all non-text content. Decorative images should be hidden from assistive tech.',
+      '1.2.1': 'Provide a text transcript or an audio/video description for prerecorded audio or video content.',
+      '1.2.2': 'Provide synchronized captions for all prerecorded audio content in synchronized media.',
+      '1.2.3': 'Provide an audio description or a media alternative for prerecorded video content.',
+      '1.2.4': 'Provide captions for all live audio content in synchronized media.',
+      '1.2.5': 'Provide an audio description for all prerecorded video content.',
+      '1.2.6': 'Provide sign language interpretation for all prerecorded audio content.',
+      '1.2.7': 'Provide an extended audio description for prerecorded video content to describe scenes more fully during pauses.',
+      '1.2.8': 'Provide a full text transcript that includes dialogue, sounds, and descriptions for any synchronized media.',
+      '1.2.9': 'Provide a text transcript that includes dialogue, sounds, and descriptions for live audio-only content.',
+      '1.3.1': 'Ensure information, structure, and relationships conveyed visually are programmatically determinable.',
+      '1.3.2': 'Ensure content that relies on a specific sequence to be understood has a logical reading order.',
+      '1.3.3': 'Instructions that rely on sensory characteristics (shape, size, location) must also be available in text.',
+      '1.3.4': 'Content should not be restricted to a single display orientation (e.g., portrait or landscape).',
+      '1.3.5': 'Input fields should have an identified purpose to allow browsers to provide a better user experience.',
+      '1.3.6': 'Identify the purpose of UI components, icons, and regions to enhance navigation and comprehension.',
+      '1.4.1': 'Color should not be the only means of conveying information, indicating an action, or distinguishing a visual element.',
+      '1.4.2': 'If an audio track plays automatically for more than 3 seconds, provide a mechanism to pause or stop it.',
+      '1.4.3': 'Ensure text has sufficient contrast against its background (at least 4.5:1 for normal text).',
+      '1.4.4': 'Users should be able to resize text up to 200% without loss of content or functionality.',
+      '1.4.5': 'Use actual text rather than images of text unless the image is purely decorative or part of a logo.',
+      '1.4.6': 'Ensure text has enhanced contrast (at least 7:1) against its background.',
+      '1.4.7': 'For audio content playing in the background, a user should be able to turn it off or adjust the volume independently.',
+      '1.4.8': 'Provide a way for users to customize text and visual presentation settings (e.g., foreground and background colors).',
+      '1.4.9': 'Images of text should not be used except for decorative or logo purposes.',
+      '1.4.10': 'Content should not require horizontal scrolling to be read on a screen up to 320 CSS pixels wide.',
+      '1.4.11': 'Ensure sufficient contrast for UI components (buttons, inputs) and graphical objects.',
+      '1.4.12': 'Text spacing properties (line height, letter spacing) should not cause loss of content or functionality.',
+      '1.4.13': 'Ensure content that appears on hover or focus is dismissable, hoverable, and persistent.',
+      '2.1.1': 'All functionality should be operable through a keyboard without requiring specific timings for keystrokes.',
+      '2.1.2': 'Users should not be trapped in a single component when using a keyboard.',
+      '2.1.3': 'All functionality should be operable by a keyboard without exception.',
+      '2.1.4': 'Provide a way to turn off or modify single character shortcuts (e.g., "S" for save).',
+      '2.2.1': 'If a time limit is required, users must be able to adjust, extend, or turn off the limit.',
+      '2.2.2': 'For content that moves, blinks, or scrolls automatically, provide controls to pause, stop, or hide it.',
+      '2.2.3': 'Content should not have any time limits unless absolutely necessary.',
+      '2.2.4': 'Users should be able to postpone or suppress non-essential interruptions, such as pop-ups or alerts.',
+      '2.2.5': 'Users should not lose data if a session times out. They should be able to re-authenticate and continue.',
+      '2.2.6': 'If an authentication session times out, provide a way to re-authenticate without losing data.',
+      '2.3.1': 'Content should not flash more than three times in any one-second period.',
+      '2.3.2': 'Content on the screen should not contain more than three flashes in any one-second period.',
+      '2.3.3': 'For user-initiated animations, provide a mechanism to disable or control the motion.',
+      '2.4.1': 'Provide skip links or other bypass mechanisms for repeated blocks of content.',
+      '2.4.2': 'Each web page should have a unique and descriptive title.',
+      '2.4.3': 'Set a logical focus order that follows the visual and DOM sequence.',
+      '2.4.4': 'The purpose of each link should be clear from its text or its context.',
+      '2.4.5': 'Provide multiple ways to find web pages within a set of pages, such as navigation, search, or a sitemap.',
+      '2.4.6': 'Use clear and descriptive headings and labels for all sections and interactive elements.',
+      '2.4.7': 'Never hide focus. Ensure a clearly visible focus indicator on all interactive elements.',
+      '2.4.8': 'Provide information about the user\'s location within a set of web pages.',
+      '2.4.9': 'The purpose of a link should be clear from its text alone, without needing additional context.',
+      '2.4.10': 'Organize content using clear and appropriate section headings.',
+      '2.5.1': 'All functionality that can be operated with a single pointer gesture can also be operated without a complex path.',
+      '2.5.2': 'For single pointer gestures (like a tap), the action should be completed on the "up" event (release), not the "down" event (press).',
+      '2.5.3': 'Ensure the accessible name of a component contains the text of its visible label.',
+      '2.5.4': 'For device motion actuation (e.g., shaking a phone), provide an alternative UI that is not motion-based.',
+      '2.5.5': 'Interactive targets (buttons, links) should be at least 44x44 CSS pixels in size.',
+      '2.5.6': 'Provide a way to use concurrent input mechanisms (e.g., keyboard and touch) without losing functionality.',
+      '3.1.1': 'The human language of each page should be identified programmatically (e.g., `<html lang="en">`).',
+      '3.1.2': 'The language of any content that is different from the page’s default language should be identified.',
+      '3.1.3': 'For words that are unusual or difficult to pronounce, provide a mechanism for the user to understand them.',
+      '3.1.4': 'Provide a mechanism for users to understand the full form of abbreviations.',
+      '3.1.5': 'Ensure content is written at a reading level that can be understood by people with low literacy skills.',
+      '3.1.6': 'Provide a mechanism for users to understand the pronunciation of words when their pronunciation is ambiguous.',
+      '3.2.1': 'Changing focus to a component should not automatically cause a major change in context (e.g., submitting a form).',
+      '3.2.2': 'Changing the value of a user interface component should not automatically cause a major change in context.',
+      '3.2.3': 'Ensure navigation menus that are repeated across multiple pages are in the same order each time.',
+      '3.2.4': 'Components with the same functionality across pages should be identified consistently.',
+      '3.2.5': 'Change on Request',
+      '3.3.1': 'Error Identification',
+      '3.3.2': 'Labels or Instructions',
+      '3.3.3': 'Error Suggestion',
+      '3.3.4': 'Error Prevention (Legal, Financial, Data)',
+      '3.3.5': 'Help',
+      '3.3.6': 'Error Prevention (All)',
+      '4.1.1': 'Parsing',
+      '4.1.2': 'Name, Role, Value',
+      '4.1.3': 'Status Messages'
+    };
+
+    const el = {
+      app: document.getElementById('app'),
+      rows: document.getElementById('rows'),
+      empty: document.getElementById('empty'),
+      role: document.getElementById('role'),
+      ownership: document.getElementById('ownership'),
+      level: document.getElementById('level'),
+      query: document.getElementById('query'),
+      resultCount: document.getElementById('result-count'),
+      btns: Array.from(document.querySelectorAll('.side .btn')),
+      counts: {
+        all: document.getElementById('count-all'),
+        biz: document.getElementById('count-biz'),
+        auth: document.getElementById('count-auth'),
+        vis: document.getElementById('count-vis'),
+        ux: document.getElementById('count-ux'),
+        fed: document.getElementById('count-fed'),
+      },
+      exportCSV: document.getElementById('export-csv'),
+      exportJSON: document.getElementById('export-json'),
+      importJSON: document.getElementById('import-json'),
+      importBtn: document.getElementById('import-json-btn'),
+      reset: document.getElementById('reset'),
+      theme: document.getElementById('theme')
+    };
+
+    let dataset = [];
+    let checks = JSON.parse(localStorage.getItem(CHECKS_KEY) || '{}');
+
+    function csvToRows(csv) {
+      const lines = csv.split(/\r?\n/).filter(Boolean);
+      const headers = lines.shift().split(',');
+      return lines.map(line => {
+        const cells = [];
+        let cur = '', inQ = false;
+        for (let i=0; i<line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQ = !inQ; continue; }
+          if (ch === ',' && !inQ) { cells.push(cur.trim()); cur=''; continue; }
+          cur += ch;
+        }
+        cells.push(cur.trim());
+        const o = {};
+        headers.forEach((h, idx) => o[h.trim()] = (cells[idx]||'').trim());
+        return o;
+      });
+    }
+
+    async function loadData() {
+      try {
+        const cached = localStorage.getItem(STORAGE_KEY);
+        if (cached) dataset = csvToRows(cached);
+        const resp = await fetch(CSV_URL, { cache: 'no-store' });
+        if (resp.ok) {
+          const csv = await resp.text();
+          localStorage.setItem(STORAGE_KEY, csv);
+          dataset = csvToRows(csv);
+        } else if (!dataset.length) {
+          dataset = csvToRows(embeddedFallback);
+        }
+      } catch (e) {
+        if (!dataset.length) dataset = csvToRows(embeddedFallback);
+      }
+
+      // Align titles with WCAG 2.1 TR. If missing, just show the SC number.
+      dataset = dataset.map(r => {
+        const sc = r["WCAG SC"]; const tt = WCAG21_TITLES[sc];
+        return { ...r, scTitle: tt ? `${sc} ${tt}` : sc };
+      });
+    }
+
+    function matchesFilters(row) {
+      const role = el.role.value;
+      const own = el.ownership.value;
+      const level = el.level.value;
+      const q = el.query.value.toLowerCase().trim();
+
+      if (level === 'AA') {
+        if (row.Level === 'AAA') return false;
+      } else if (level && row.Level !== level) {
+        return false;
+      }
+
+      if (role) {
+        const val = row[role] || '';
+        if (!val) return false;
+        if (own && !val.includes(own)) return false;
+      } else if (own) {
+        const any = roles.some(r => (row[r]||'').includes(own));
+        if (!any) return false;
+      }
+      if (q) {
+        const hay = [row["WCAG SC"], row.scTitle, ...roles.map(r => row[r])].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    }
+
+    // Link to WCAG 2.2 Understanding pages
+    function understandingLink(sc) {
+      const U22 = {
+        '1.1.1': 'non-text-content',
+        '1.2.1': 'audio-only-and-video-only-prerecorded',
+        '1.2.2': 'captions-prerecorded',
+        '1.2.3': 'audio-description-or-media-alternative-prerecorded',
+        '1.2.4': 'captions-live',
+        '1.2.5': 'audio-description-prerecorded',
+        '1.2.6': 'sign-language-prerecorded',
+        '1.2.7': 'extended-audio-description-prerecorded',
+        '1.2.8': 'media-alternative-prerecorded',
+        '1.2.9': 'audio-only-live',
+        '1.3.1': 'info-and-relationships',
+        '1.3.2': 'meaningful-sequence',
+        '1.3.3': 'sensory-characteristics',
+        '1.3.4': 'orientation',
+        '1.3.5': 'identify-input-purpose',
+        '1.3.6': 'identify-purpose',
+        '1.4.1': 'use-of-color',
+        '1.4.2': 'audio-control',
+        '1.4.3': 'contrast-minimum',
+        '1.4.4': 'resize-text',
+        '1.4.5': 'images-of-text',
+        '1.4.6': 'contrast-enhanced',
+        '1.4.7': 'low-or-no-background-audio',
+        '1.4.8': 'visual-presentation',
+        '1.4.9': 'images-of-text-no-exception',
+        '1.4.10': 'reflow',
+        '1.4.11': 'non-text-contrast',
+        '1.4.12': 'text-spacing',
+        '1.4.13': 'content-on-hover-or-focus',
+        '2.1.1': 'keyboard',
+        '2.1.2': 'no-keyboard-trap',
+        '2.1.3': 'keyboard-no-exception',
+        '2.1.4': 'character-key-shortcuts',
+        '2.2.1': 'timing-adjustable',
+        '2.2.2': 'pause-stop-hide',
+        '2.2.3': 'no-timing',
+        '2.2.4': 'interruptions',
+        '2.2.5': 're-authenticating',
+        '2.2.6': 'timeouts',
+        '2.3.1': 'three-flashes-or-below-threshold',
+        '2.3.2': 'three-flashes',
+        '2.3.3': 'animation-from-interactions',
+        '2.4.1': 'bypass-blocks',
+        '2.4.2': 'page-titled',
+        '2.4.3': 'focus-order',
+        '2.4.4': 'link-purpose-in-context',
+        '2.4.5': 'multiple-ways',
+        '2.4.6': 'headings-and-labels',
+        '2.4.7': 'focus-visible',
+        '2.4.8': 'location',
+        '2.4.9': 'link-purpose-link-only',
+        '2.4.10': 'section-headings',
+        '2.5.1': 'pointer-gestures',
+        '2.5.2': 'pointer-cancellation',
+        '2.5.3': 'label-in-name',
+        '2.5.4': 'motion-actuation',
+        '2.5.5': 'target-size',
+        '2.5.6': 'concurrent-input-mechanisms',
+        '3.1.1': 'language-of-page',
+        '3.1.2': 'language-of-parts',
+        '3.1.3': 'unusual-words',
+        '3.1.4': 'abbreviations',
+        '3.1.5': 'reading-level',
+        '3.1.6': 'pronunciation',
+        '3.2.1': 'on-focus',
+        '3.2.2': 'on-input',
+        '3.2.3': 'consistent-navigation',
+        '3.2.4': 'consistent-identification',
+        '3.2.5': 'change-on-request',
+        '3.3.1': 'error-identification',
+        '3.3.2': 'labels-or-instructions',
+        '3.3.3': 'error-suggestion',
+        '3.3.4': 'error-prevention-legal-financial-data',
+        '3.3.5': 'help',
+        '3.3.6': 'error-prevention-all',
+        '4.1.1': 'parsing',
+        '4.1.2': 'name-role-value',
+        '4.1.3': 'status-messages'
+      };
+      if (U22[sc]) {
+        return `https://www.w3.org/WAI/WCAG22/Understanding/${U22[sc]}`;
+      } else {
+        // A generic link should never be used, as you requested. We can default to a more specific URL if a direct match isn't found.
+        // A simple approach is to use the WCAG 2.1 TR anchor, as it's the closest thing to a direct link for older SCs.
+        return `https://www.w3.org/TR/WCAG21/#${sc.replace(/\./g, '-')}`;
+      }
+    }
+
+    function render() {
+      const frag = document.createDocumentFragment();
+      const tpl = document.getElementById('row-tpl');
+      let visible = 0;
+      dataset.forEach(row => {
+        if (!matchesFilters(row)) return;
+        visible++;
+        const tr = tpl.content.cloneNode(true);
+        const sc = row["WCAG SC"];
+        const a = tr.querySelector('.sc-link');
+        a.textContent = row.scTitle; // Combined SC and Title in one column
+        a.href = understandingLink(sc);
+        const desc = tr.querySelector('.sc-desc');
+        desc.textContent = SC_SNIPPETS[sc] || '';
+        tr.querySelector('.level').textContent = row.Level;
+
+        const rolesWrap = tr.querySelector('.role-badges');
+        roles.forEach(r => {
+          const val = row[r];
+          if (!val) return;
+          const b = document.createElement('span');
+          b.className = 'badge';
+          b.dataset.has = val;
+          b.textContent = r.split('(')[0].trim() + ': ' + val;
+          rolesWrap.appendChild(b);
+        });
+
+        const id = sc;
+        const ck = tr.querySelector('input[type="checkbox"]');
+        ck.checked = !!checks[id];
+        ck.addEventListener('change', () => {
+          checks[id] = ck.checked;
+          localStorage.setItem(CHECKS_KEY, JSON.stringify(checks));
+          updateCounts();
+        });
+
+        frag.appendChild(tr);
+      });
+      el.rows.replaceChildren(frag);
+      el.empty.hidden = visible !== 0;
+      el.resultCount.textContent = `${visible} result${visible===1?'':'s'}`;
+      updateCounts();
+      document.getElementById('app').setAttribute('aria-busy','false');
+    }
+
+    function updateCounts() {
+      const total = dataset.length;
+      el.counts.all.textContent = `${Object.values(checks).filter(Boolean).length}/${total}`;
+      const byRole = {
+        'Business': 'biz',
+        'Content Authoring': 'auth',
+        'Visual Design': 'vis',
+        'User Experience (UX) Design': 'ux',
+        'Front-End Development': 'fed',
+      };
+      for (const [r, key] of Object.entries(byRole)) {
+        const ids = dataset.filter(d => (d[r]||'').length).map(d => d["WCAG SC"]);
+        const done = ids.filter(id => checks[id]).length;
+        el.counts[key].textContent = `${done}/${ids.length}`;
+      }
+    }
+
+    function exportCSV() {
+      const header = ['WCAG SC and Title','Level','Business','Content Authoring','Visual Design','UX Design','Front-End Dev','Checked'];
+      const rows = dataset.map(r => [
+        r.scTitle,
+        r.Level,
+        r['Business'] || '',
+        r['Content Authoring'] || '',
+        r['Visual Design'] || '',
+        r['User Experience (UX) Design'] || '',
+        r['Front-End Development'] || '',
+        checks[r['WCAG SC']] ? '1' : '0'
+      ]);
+      const csv = [header.join(','), ...rows.map(cols => cols.map(v => /[",\n]/.test(v) ? '"'+String(v).replace(/"/g,'""')+'"' : String(v)).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'arrm-wcag-checks.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function exportJSON() {
+      const payload = { checks, generatedAt: new Date().toISOString() };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'arrm-wcag-checks.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    function importJSON(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (data && typeof data === 'object' && data.checks) {
+            checks = { ...checks, ...data.checks };
+          } else if (data && typeof data === 'object') {
+            checks = { ...checks, ...data };
+          } else {
+            return alert('Invalid JSON format');
+          }
+          localStorage.setItem(CHECKS_KEY, JSON.stringify(checks));
+          render();
+        } catch (e) { alert('Failed to parse JSON'); }
+      };
+      reader.readAsText(file);
+    }
+
+    function wire() {
+      // Set the default filter value to AA for WCAG level
+      el.level.value = 'AA';
+      [el.role, el.ownership, el.level, el.query].forEach(c => c.addEventListener('input', render));
+      el.btns.forEach(b => {
+        b.addEventListener('click', () => {
+          el.btns.forEach(x => x.setAttribute('aria-pressed', x===b ? 'true' : 'false'));
+          el.role.value = b.dataset.role;
+          render();
+        });
+      });
+
+      el.exportCSV.addEventListener('click', (e) => { e.preventDefault(); exportCSV(); });
+      el.exportJSON.addEventListener('click', (e) => { e.preventDefault(); exportJSON(); });
+      el.importBtn.addEventListener('click', (e) => { e.preventDefault(); el.importJSON.click(); });
+      el.importJSON.addEventListener('change', (e) => { if (e.target.files[0]) importJSON(e.target.files[0]); });
+
+      el.reset.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!confirm('Clear all saved checkmarks?')) return;
+        checks = {};
+        localStorage.removeItem(CHECKS_KEY);
+        render();
+      });
+
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      el.theme.addEventListener('click', () => {
+        const cur = document.documentElement.getAttribute('data-theme');
+        const next = cur === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem(THEME_KEY, next);
+      });
+    }
+
+    (async function init(){
+      await loadData();
+      wire();
+      render();
+    })();
+  </script>
+</body>
+</html>
